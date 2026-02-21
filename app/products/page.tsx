@@ -105,6 +105,7 @@ export default function ProductsPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const catParam = searchParams.get("cat") || "all"
+    const searchParam = searchParams.get("search") || ""
 
     const [allProducts, setAllProducts] = useState<Product[]>(fallbackProducts)
     const [activeCategory, setActiveCategory] = useState(catParam)
@@ -115,6 +116,7 @@ export default function ProductsPage() {
     const [sortBy, setSortBy] = useState("highest")
     const [mobileFilters, setMobileFilters] = useState(false)
     const [toast, setToast] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState(searchParam)
 
     useEffect(() => {
         if (isSupabaseConfigured()) fetchProducts()
@@ -123,6 +125,13 @@ export default function ProductsPage() {
     useEffect(() => {
         setActiveCategory(catParam)
     }, [catParam])
+
+    useEffect(() => {
+        setSearchQuery(searchParam)
+        if (searchParam) {
+            setActiveCategory("all")
+        }
+    }, [searchParam])
 
     const switchCategory = (key: string) => {
         setActiveCategory(key)
@@ -214,8 +223,21 @@ export default function ProductsPage() {
         )
     }
 
+    // Search filter
+    const filteredBySearch = searchQuery.trim()
+        ? allProducts.filter((p) => {
+            const q = searchQuery.toLowerCase()
+            return (
+                p.name.toLowerCase().includes(q) ||
+                p.origin.toLowerCase().includes(q) ||
+                (p.category || "").toLowerCase().includes(q) ||
+                (p.slug || "").toLowerCase().includes(q)
+            )
+        })
+        : allProducts
+
     const getProductsByCategory = (catKey: string) => {
-        return allProducts
+        return filteredBySearch
             .filter((p) => p.category === catKey)
             .sort((a, b) => sortBy === "highest" ? b.price - a.price : a.price - b.price)
     }
@@ -223,6 +245,21 @@ export default function ProductsPage() {
     const visibleCategories = activeCategory === "all"
         ? CATEGORIES.filter((c) => c.key !== "all")
         : CATEGORIES.filter((c) => c.key === activeCategory)
+
+    const handlePageSearch = (value: string) => {
+        setSearchQuery(value)
+        if (value.trim()) {
+            setActiveCategory("all")
+            router.push(`/products?search=${encodeURIComponent(value.trim())}`, { scroll: false })
+        } else {
+            router.push("/products", { scroll: false })
+        }
+    }
+
+    const clearSearch = () => {
+        setSearchQuery("")
+        router.push("/products", { scroll: false })
+    }
 
     const renderProductCard = (product: Product) => (
         <Link
@@ -293,13 +330,38 @@ export default function ProductsPage() {
                 {/* Page Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-                        The Prime Collection
+                        {searchQuery.trim() ? "Search Results" : "The Prime Collection"}
                     </h1>
                     <p className="text-gray-500 max-w-2xl leading-relaxed">
-                        Discover our curated selection of the world&apos;s finest beef.
-                        Sourced from the most prestigious ranches in Japan, Australia, and
-                        the USA. Every cut is hand-selected by our master butchers.
+                        {searchQuery.trim()
+                            ? <>Showing results for &ldquo;<span className="font-semibold text-charcoal">{searchQuery}</span>&rdquo;</>
+                            : "Discover our curated selection of the world's finest beef. Sourced from the most prestigious ranches in Japan, Australia, and the USA. Every cut is hand-selected by our master butchers."
+                        }
                     </p>
+                </div>
+
+                {/* Search Bar */}
+                <div className="mb-8">
+                    <div className="relative max-w-xl">
+                        <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                            search
+                        </span>
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => handlePageSearch(e.target.value)}
+                            placeholder="Search by name, origin, or category..."
+                            className="w-full pl-12 pr-12 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={clearSearch}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <span className="material-icons text-xl">close</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Category Tabs */}
@@ -325,8 +387,8 @@ export default function ProductsPage() {
                         Showing{" "}
                         <span className="font-bold text-charcoal">
                             {activeCategory === "all"
-                                ? allProducts.length
-                                : allProducts.filter((p) => p.category === activeCategory).length}
+                                ? filteredBySearch.length
+                                : filteredBySearch.filter((p) => p.category === activeCategory).length}
                         </span>{" "}
                         premium cuts
                     </p>

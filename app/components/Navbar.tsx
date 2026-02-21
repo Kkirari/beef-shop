@@ -1,9 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient"
+
+interface SearchResult {
+    id: string
+    name: string
+    slug: string
+    price: number
+    image_url: string
+    origin: string
+    portion: string
+    category: string
+}
 
 export default function Navbar() {
     const router = useRouter()
@@ -11,6 +22,15 @@ export default function Navbar() {
     const [user, setUser] = useState<{ email?: string; full_name?: string; role?: string } | null>(null)
     const [cartCount, setCartCount] = useState(0)
     const [showUserMenu, setShowUserMenu] = useState(false)
+
+    // Search state
+    const [searchOpen, setSearchOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+    const [searchLoading, setSearchLoading] = useState(false)
+    const searchInputRef = useRef<HTMLInputElement>(null)
+    const searchOverlayRef = useRef<HTMLDivElement>(null)
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useEffect(() => {
         if (isSupabaseConfigured()) {
@@ -29,6 +49,74 @@ export default function Navbar() {
             }
         }
     }, [])
+
+    // Auto-focus search input when overlay opens
+    useEffect(() => {
+        if (searchOpen && searchInputRef.current) {
+            setTimeout(() => searchInputRef.current?.focus(), 100)
+        }
+        if (!searchOpen) {
+            setSearchQuery("")
+            setSearchResults([])
+        }
+    }, [searchOpen])
+
+    // Close search overlay on Escape or click outside
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && searchOpen) {
+                setSearchOpen(false)
+            }
+        }
+        const handleClickOutside = (e: MouseEvent) => {
+            if (searchOverlayRef.current && !searchOverlayRef.current.contains(e.target as Node)) {
+                setSearchOpen(false)
+            }
+        }
+        document.addEventListener("keydown", handleKeyDown)
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown)
+            document.removeEventListener("mousedown", handleClickOutside)
+        }
+    }, [searchOpen])
+
+    // Debounced search
+    const performSearch = useCallback(async (query: string) => {
+        if (!query.trim()) {
+            setSearchResults([])
+            setSearchLoading(false)
+            return
+        }
+        setSearchLoading(true)
+        if (isSupabaseConfigured()) {
+            const { data, error } = await supabase
+                .from("products")
+                .select("id, name, slug, price, image_url, origin, portion, category")
+                .or(`name.ilike.%${query}%,origin.ilike.%${query}%,category.ilike.%${query}%,description.ilike.%${query}%`)
+                .limit(5)
+            if (!error && data) {
+                setSearchResults(data)
+            }
+        }
+        setSearchLoading(false)
+    }, [])
+
+    const handleSearchInput = (value: string) => {
+        setSearchQuery(value)
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => {
+            performSearch(value)
+        }, 300)
+    }
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (searchQuery.trim()) {
+            setSearchOpen(false)
+            router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+        }
+    }
 
     const refreshCartCount = async () => {
         const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -106,7 +194,10 @@ export default function Navbar() {
                         </div>
                     </div>
                     <div className="flex items-center gap-6">
-                        <button className="text-charcoal hover:text-primary transition-colors">
+                        <button
+                            onClick={() => setSearchOpen(true)}
+                            className="text-charcoal hover:text-primary transition-colors"
+                        >
                             <span className="material-icons">search</span>
                         </button>
                         <Link href="/checkout" className="relative text-charcoal hover:text-primary transition-colors">
@@ -241,6 +332,145 @@ export default function Navbar() {
                     </div>
                 )}
             </div>
+
+            {/* ─── Search Overlay ─── */}
+            {searchOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
+
+                    {/* Search Panel */}
+                    <div
+                        ref={searchOverlayRef}
+                        className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border-t border-primary/10"
+                        style={{ animation: "slideDown 0.2s ease-out" }}
+                    >
+                        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+                            {/* Search Input */}
+                            <form onSubmit={handleSearchSubmit}>
+                                <div className="relative">
+                                    <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
+                                        search
+                                    </span>
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => handleSearchInput(e.target.value)}
+                                        placeholder="Search for premium cuts... (e.g. wagyu, ribeye, tenderloin)"
+                                        className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { setSearchQuery(""); setSearchResults([]) }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        >
+                                            <span className="material-icons text-xl">close</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+
+                            {/* Search Results */}
+                            {searchLoading && (
+                                <div className="flex items-center justify-center py-8">
+                                    <span className="material-icons animate-spin text-2xl text-primary">autorenew</span>
+                                </div>
+                            )}
+
+                            {!searchLoading && searchQuery.trim() && searchResults.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 px-1">
+                                        Products ({searchResults.length})
+                                    </p>
+                                    {searchResults.map((product) => (
+                                        <Link
+                                            key={product.id}
+                                            href={`/products/${product.slug}`}
+                                            onClick={() => setSearchOpen(false)}
+                                            className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                                        >
+                                            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={product.image_url}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-sm truncate group-hover:text-primary transition-colors">
+                                                    {product.name}
+                                                </p>
+                                                <p className="text-xs text-gray-400 truncate">
+                                                    {product.origin} • {product.portion}
+                                                </p>
+                                            </div>
+                                            <span className="text-base font-extrabold text-primary">
+                                                ${product.price.toFixed(2)}
+                                            </span>
+                                        </Link>
+                                    ))}
+
+                                    {/* View all results */}
+                                    <button
+                                        onClick={() => {
+                                            setSearchOpen(false)
+                                            router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+                                        }}
+                                        className="w-full mt-2 py-3 text-center text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        View all results for &ldquo;{searchQuery}&rdquo;
+                                        <span className="material-icons text-base">arrow_forward</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {!searchLoading && searchQuery.trim() && searchResults.length === 0 && (
+                                <div className="py-10 text-center">
+                                    <span className="material-icons text-4xl text-gray-200 mb-3 block">search_off</span>
+                                    <p className="text-gray-500 font-medium">No products found for &ldquo;{searchQuery}&rdquo;</p>
+                                    <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
+                                </div>
+                            )}
+
+                            {!searchQuery.trim() && (
+                                <div className="py-6 text-center">
+                                    <p className="text-sm text-gray-400">
+                                        Type to search products by name, origin, or category
+                                    </p>
+                                    <div className="flex items-center justify-center gap-2 mt-3">
+                                        {["Wagyu", "Steak", "Angus"].map((tag) => (
+                                            <button
+                                                key={tag}
+                                                onClick={() => handleSearchInput(tag)}
+                                                className="px-3 py-1.5 bg-gray-100 hover:bg-primary/10 hover:text-primary text-xs font-bold rounded-lg transition-colors"
+                                            >
+                                                {tag}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Slide down animation */}
+            <style jsx>{`
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-8px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `}</style>
         </nav>
     )
 }
