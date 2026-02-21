@@ -147,7 +147,7 @@ export default function BestSellers() {
                         <Link
                             key={p.id}
                             href={`/products/${p.slug}`}
-                            className="group bg-white rounded-2xl overflow-hidden card-shadow block"
+                            className="group bg-white rounded-2xl overflow-hidden card-shadow block flex flex-col"
                         >
                             {/* Image */}
                             <div className="relative h-64 overflow-hidden">
@@ -165,9 +165,9 @@ export default function BestSellers() {
                             </div>
 
                             {/* Info */}
-                            <div className="p-6">
+                            <div className="p-6 flex-1 flex flex-col">
                                 <h3 className="font-bold text-lg mb-2">{p.name}</h3>
-                                <p className="text-sm text-gray-500 mb-6">
+                                <p className="text-sm text-gray-500 mb-6 flex-1">
                                     {p.description || `${p.origin}, ${p.portion}`}
                                 </p>
                                 <div className="flex items-center justify-between">

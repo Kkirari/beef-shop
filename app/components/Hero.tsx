@@ -38,7 +38,7 @@ export default function Hero() {
                             <span className="material-icons">arrow_forward</span>
                         </Link>
                         <Link
-                            href="#"
+                            href="/our-story"
                             className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all text-center"
                         >
                             Our Farm Story

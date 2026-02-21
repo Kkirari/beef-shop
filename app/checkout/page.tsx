@@ -41,6 +41,7 @@ export default function CheckoutPage() {
     const [delivery, setDelivery] = useState("express")
     const [paymentTab, setPaymentTab] = useState("card")
     const [orderSuccess, setOrderSuccess] = useState(false)
+    const [modalMsg, setModalMsg] = useState<string | null>(null)
 
     // Shipping form
     const [firstName, setFirstName] = useState("")
@@ -114,11 +115,11 @@ export default function CheckoutPage() {
 
     const placeOrder = async () => {
         if (!firstName || !lastName || !address || !city) {
-            alert("Please fill in all shipping fields")
+            setModalMsg("Please fill in all shipping fields before placing your order.")
             return
         }
         if (cartItems.length === 0) {
-            alert("Your cart is empty")
+            setModalMsg("Your cart is empty. Please add items before checkout.")
             return
         }
 
@@ -162,7 +163,7 @@ export default function CheckoutPage() {
             .single()
 
         if (orderError || !order) {
-            alert("Failed to place order. Please try again.")
+            setModalMsg("Failed to place order. Please try again.")
             setPlacing(false)
             return
         }
@@ -596,51 +597,114 @@ export default function CheckoutPage() {
                                             </button>
                                         </div>
 
-                                        {/* Card Form */}
-                                        <div className="p-8 space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
-                                                    Card Number
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        className="w-full bg-background-light border-transparent rounded-lg px-4 py-3 focus:ring-primary transition-all"
-                                                        placeholder="0000 0000 0000 0000"
-                                                        type="text"
-                                                    />
-                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
-                                                        <span className="text-xs text-slate-400 font-bold">
-                                                            VISA
-                                                        </span>
-                                                        <span className="text-xs text-slate-400 font-bold">
-                                                            MC
-                                                        </span>
+                                        {/* Payment Content */}
+                                        {paymentTab === "card" && (
+                                            <div className="p-8 space-y-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                                                        Card Number
+                                                    </label>
+                                                    <div className="relative">
+                                                        <input
+                                                            className="w-full bg-background-light border-transparent rounded-lg px-4 py-3 focus:ring-primary transition-all"
+                                                            placeholder="0000 0000 0000 0000"
+                                                            type="text"
+                                                        />
+                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
+                                                            <span className="text-xs text-slate-400 font-bold">
+                                                                VISA
+                                                            </span>
+                                                            <span className="text-xs text-slate-400 font-bold">
+                                                                MC
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                                                            Expiry Date
+                                                        </label>
+                                                        <input
+                                                            className="w-full bg-background-light border-transparent rounded-lg px-4 py-3 focus:ring-primary transition-all"
+                                                            placeholder="MM / YY"
+                                                            type="text"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                                                            CVV
+                                                        </label>
+                                                        <input
+                                                            className="w-full bg-background-light border-transparent rounded-lg px-4 py-3 focus:ring-primary transition-all"
+                                                            placeholder="123"
+                                                            type="text"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
-                                                        Expiry Date
-                                                    </label>
-                                                    <input
-                                                        className="w-full bg-background-light border-transparent rounded-lg px-4 py-3 focus:ring-primary transition-all"
-                                                        placeholder="MM / YY"
-                                                        type="text"
+                                        )}
+
+                                        {paymentTab === "qr" && (
+                                            <div className="p-8 text-center">
+                                                <div className="inline-block bg-white border-2 border-primary/10 rounded-2xl p-4 mb-6 shadow-sm">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src="/images/mockup.png"
+                                                        alt="QR Code for payment"
+                                                        className="w-56 h-56 object-contain mx-auto"
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
-                                                        CVV
-                                                    </label>
-                                                    <input
-                                                        className="w-full bg-background-light border-transparent rounded-lg px-4 py-3 focus:ring-primary transition-all"
-                                                        placeholder="123"
-                                                        type="text"
-                                                    />
+                                                <h4 className="font-bold text-lg mb-2">Scan to Pay</h4>
+                                                <p className="text-sm text-slate-500 mb-4 max-w-xs mx-auto">
+                                                    Open your banking or e-wallet app and scan the QR code above to complete payment.
+                                                </p>
+                                                <div className="inline-flex items-center gap-2 bg-primary/5 text-primary px-4 py-2 rounded-lg text-sm font-bold">
+                                                    <span className="material-icons text-base">info</span>
+                                                    Amount: ${total.toFixed(2)}
                                                 </div>
                                             </div>
-                                        </div>
+                                        )}
+
+                                        {paymentTab === "bank" && (
+                                            <div className="p-8">
+                                                <div className="bg-background-light rounded-xl p-6 mb-6">
+                                                    <h4 className="font-bold text-sm uppercase tracking-widest text-slate-400 mb-4">
+                                                        Transfer Details
+                                                    </h4>
+                                                    <div className="space-y-3">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-sm text-slate-500">Bank Name</span>
+                                                            <span className="text-sm font-bold">PrimeCut National Bank</span>
+                                                        </div>
+                                                        <div className="h-px bg-primary/5" />
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-sm text-slate-500">Account Name</span>
+                                                            <span className="text-sm font-bold">PrimeCut Co., Ltd.</span>
+                                                        </div>
+                                                        <div className="h-px bg-primary/5" />
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-sm text-slate-500">Account Number</span>
+                                                            <span className="text-sm font-bold font-mono">XXX-X-XXXXX-X</span>
+                                                        </div>
+                                                        <div className="h-px bg-primary/5" />
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-sm text-slate-500">Amount</span>
+                                                            <span className="text-sm font-bold text-primary">${total.toFixed(2)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                                    <span className="material-icons text-amber-500 text-xl mt-0.5">warning</span>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-amber-800 mb-1">Important</p>
+                                                        <p className="text-xs text-amber-700 leading-relaxed">
+                                                            Please transfer the exact amount shown above. Your order will be confirmed within 1-2 hours after payment verification.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </section>
@@ -804,6 +868,29 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </footer>
+
+            {/* Custom Modal */}
+            {modalMsg && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden animate-bounce-in">
+                        <div className="p-8 text-center">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+                                <span className="material-icons text-primary text-3xl">info</span>
+                            </div>
+                            <h3 className="text-xl font-bold mb-3">Notice</h3>
+                            <p className="text-slate-500 text-sm leading-relaxed">{modalMsg}</p>
+                        </div>
+                        <div className="px-8 pb-8">
+                            <button
+                                onClick={() => setModalMsg(null)}
+                                className="w-full bg-primary hover:bg-red-700 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest transition-colors"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }

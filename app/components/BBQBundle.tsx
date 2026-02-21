@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient"
+
+const BBQ_BUNDLE_SLUG = "bbq-lovers-sampler-box"
 
 function useCountdown(targetDate: Date) {
     const [timeLeft, setTimeLeft] = useState({ hours: 0, mins: 0, secs: 0 })
@@ -37,6 +39,62 @@ export default function BBQBundle() {
         return d
     })
     const { hours, mins, secs } = useCountdown(deadline)
+    const [adding, setAdding] = useState(false)
+    const [toast, setToast] = useState<string | null>(null)
+
+    const claimBundle = async () => {
+        if (!isSupabaseConfigured()) {
+            setToast("BBQ Bundle added to cart! 🛒")
+            setTimeout(() => setToast(null), 2000)
+            return
+        }
+
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+            window.location.href = "/login"
+            return
+        }
+
+        setAdding(true)
+
+        // Find the BBQ Bundle product by slug
+        const { data: product } = await supabase
+            .from("products")
+            .select("id, name")
+            .eq("slug", BBQ_BUNDLE_SLUG)
+            .maybeSingle()
+
+        if (!product) {
+            setToast("Bundle not found. Please try again.")
+            setTimeout(() => setToast(null), 2000)
+            setAdding(false)
+            return
+        }
+
+        // Check if already in cart
+        const { data: existing } = await supabase
+            .from("cart_items")
+            .select("id, quantity")
+            .eq("user_id", user.id)
+            .eq("product_id", product.id)
+            .maybeSingle()
+
+        if (existing) {
+            await supabase
+                .from("cart_items")
+                .update({ quantity: existing.quantity + 1 })
+                .eq("id", existing.id)
+        } else {
+            await supabase
+                .from("cart_items")
+                .insert({ user_id: user.id, product_id: product.id, quantity: 1 })
+        }
+
+        setAdding(false)
+        setToast(`${product.name} added to cart! 🛒`)
+        setTimeout(() => setToast(null), 2000)
+        window.dispatchEvent(new Event("cart-updated"))
+    }
 
     return (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
@@ -80,12 +138,20 @@ export default function BBQBundle() {
                         ))}
                     </div>
 
-                    <Link
-                        href="#"
-                        className="inline-block bg-primary hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all"
+                    <button
+                        onClick={claimBundle}
+                        disabled={adding}
+                        className="inline-block bg-primary hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Claim Bundle Now — $199
-                    </Link>
+                        {adding ? (
+                            <span className="flex items-center gap-2">
+                                <span className="material-icons animate-spin text-lg">autorenew</span>
+                                Adding to Cart...
+                            </span>
+                        ) : (
+                            "Claim Bundle Now — $199"
+                        )}
+                    </button>
                 </div>
 
                 {/* Right Image */}
@@ -99,6 +165,14 @@ export default function BBQBundle() {
                     <div className="absolute inset-0 bg-gradient-to-r from-charcoal via-transparent to-transparent hidden lg:block" />
                 </div>
             </div>
+
+            {/* Toast Notification */}
+            {toast && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-charcoal text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-bounce-in">
+                    <span className="material-icons text-green-400 text-lg">check_circle</span>
+                    <span className="text-sm font-medium">{toast}</span>
+                </div>
+            )}
         </section>
     )
 }
