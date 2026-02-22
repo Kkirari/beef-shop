@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Navbar from "../../components/Navbar"
+import { useLanguage } from "../../../lib/i18n"
 
 const galleryImages = [
     {
@@ -27,59 +28,30 @@ const galleryImages = [
     },
 ]
 
-const doneness = [
-    {
-        name: "Rare",
-        temp: "120-125°F",
-        desc: "Deep Red Center",
-        gradient: "from-red-900 to-red-800",
-        recommended: false,
-    },
-    {
-        name: "Med-Rare",
-        temp: "130-135°F",
-        desc: "Warm Red Center",
-        gradient: "from-red-800 to-red-600",
-        recommended: true,
-    },
-    {
-        name: "Medium",
-        temp: "140-145°F",
-        desc: "Warm Pink Center",
-        gradient: "from-red-600 to-orange-800",
-        recommended: false,
-    },
-    {
-        name: "Med-Well",
-        temp: "150-155°F",
-        desc: "Slightly Pink",
-        gradient: "from-orange-800 to-amber-900",
-        recommended: false,
-    },
-    {
-        name: "Well Done",
-        temp: "160°F+",
-        desc: "Fully Cooked",
-        gradient: "bg-zinc-950",
-        recommended: false,
-    },
-]
-
 export default function ProductDetailPage() {
+    const { t } = useLanguage()
     const [selectedImage, setSelectedImage] = useState(0)
     const [selectedWeight, setSelectedWeight] = useState(0)
     const [selectedThickness, setSelectedThickness] = useState(1)
     const [quantity, setQuantity] = useState(1)
 
     const weights = [
-        { label: "200g", sub: "Single Serving" },
-        { label: "400g", sub: "Duo Portion" },
-        { label: "600g", sub: "Large Cut" },
+        { label: "200g", sub: t.productDetail.singleServing },
+        { label: "400g", sub: t.productDetail.duoPortion },
+        { label: "600g", sub: t.productDetail.largeCut },
     ]
 
     const thicknesses = [
-        { label: 'Standard (0.75")', checked: false },
-        { label: 'Thick Cut (1.25")', checked: true },
+        { label: t.productDetail.standard, checked: false },
+        { label: t.productDetail.thickCut, checked: true },
+    ]
+
+    const doneness = [
+        { name: t.productDetail.rare, temp: t.productDetail.rareTemp, desc: t.productDetail.rareDesc, gradient: "from-red-900 to-red-800", recommended: false },
+        { name: t.productDetail.medRare, temp: t.productDetail.medRareTemp, desc: t.productDetail.medRareDesc, gradient: "from-red-800 to-red-600", recommended: true },
+        { name: t.productDetail.medium, temp: t.productDetail.mediumTemp, desc: t.productDetail.mediumDesc, gradient: "from-red-600 to-orange-800", recommended: false },
+        { name: t.productDetail.medWell, temp: t.productDetail.medWellTemp, desc: t.productDetail.medWellDesc, gradient: "from-orange-800 to-amber-900", recommended: false },
+        { name: t.productDetail.wellDone, temp: t.productDetail.wellDoneTemp, desc: t.productDetail.wellDoneDesc, gradient: "bg-zinc-950", recommended: false },
     ]
 
     return (
@@ -89,17 +61,17 @@ export default function ProductDetailPage() {
                 {/* Breadcrumb */}
                 <nav className="flex mb-8 text-xs font-medium uppercase tracking-widest text-zinc-500">
                     <Link href="/" className="hover:text-primary transition-colors">
-                        Home
+                        {t.productDetail.home}
                     </Link>
                     <span className="mx-2">/</span>
                     <Link
                         href="/products"
                         className="hover:text-primary transition-colors"
                     >
-                        Wagyu
+                        {t.productDetail.wagyu}
                     </Link>
                     <span className="mx-2">/</span>
-                    <span className="text-zinc-900">A5 Miyazaki Ribeye</span>
+                    <span className="text-zinc-900">{t.productDetail.productName}</span>
                 </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -115,7 +87,7 @@ export default function ProductDetailPage() {
                             />
                             <div className="absolute top-4 left-4">
                                 <span className="bg-primary text-white px-3 py-1 text-xs font-bold tracking-widest rounded uppercase">
-                                    Certified A5
+                                    {t.productDetail.certifiedA5}
                                 </span>
                             </div>
                         </div>
@@ -127,8 +99,8 @@ export default function ProductDetailPage() {
                                     key={idx}
                                     onClick={() => setSelectedImage(idx + 1)}
                                     className={`aspect-square rounded-lg overflow-hidden transition-opacity ${selectedImage === idx + 1
-                                            ? "border-2 border-primary opacity-100"
-                                            : "border border-zinc-200 opacity-60 hover:opacity-100"
+                                        ? "border-2 border-primary opacity-100"
+                                        : "border border-zinc-200 opacity-60 hover:opacity-100"
                                         }`}
                                 >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -146,10 +118,10 @@ export default function ProductDetailPage() {
                     <div className="lg:col-span-5 flex flex-col">
                         <div className="mb-2">
                             <span className="text-sm font-semibold text-primary tracking-widest uppercase">
-                                Miyazaki Prefecture, Japan
+                                {t.productDetail.origin}
                             </span>
                             <h1 className="text-4xl md:text-5xl font-bold mt-2 leading-tight tracking-tight">
-                                A5 Japanese Wagyu Ribeye
+                                {t.productDetail.productName}
                             </h1>
                         </div>
 
@@ -163,7 +135,7 @@ export default function ProductDetailPage() {
                                 ))}
                             </div>
                             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                (142 Reviews)
+                                {t.productDetail.reviews}
                             </span>
                         </div>
 
@@ -176,7 +148,7 @@ export default function ProductDetailPage() {
                                 </span>
                             </div>
                             <p className="text-sm text-zinc-500 mt-1">
-                                Free overnight shipping on orders over $250
+                                {t.productDetail.freeShipping}
                             </p>
                         </div>
 
@@ -186,10 +158,10 @@ export default function ProductDetailPage() {
                             <div>
                                 <div className="flex justify-between items-end mb-4">
                                     <label className="text-xs font-bold uppercase tracking-widest">
-                                        Select Weight
+                                        {t.productDetail.selectWeight}
                                     </label>
                                     <span className="text-xs text-primary font-medium cursor-pointer">
-                                        Size Guide
+                                        {t.productDetail.sizeGuide}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
@@ -198,8 +170,8 @@ export default function ProductDetailPage() {
                                             key={w.label}
                                             onClick={() => setSelectedWeight(idx)}
                                             className={`py-4 rounded-lg transition-all ${selectedWeight === idx
-                                                    ? "border-2 border-primary bg-primary/5"
-                                                    : "border-2 border-zinc-200 hover:border-zinc-400"
+                                                ? "border-2 border-primary bg-primary/5"
+                                                : "border-2 border-zinc-200 hover:border-zinc-400"
                                                 }`}
                                         >
                                             <span className="block text-sm font-bold">
@@ -216,19 +188,19 @@ export default function ProductDetailPage() {
                             {/* Thickness Selector */}
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest mb-4">
-                                    Custom Thickness
+                                    {t.productDetail.customThickness}
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {thicknesses.map((t, idx) => (
+                                    {thicknesses.map((th, idx) => (
                                         <button
-                                            key={t.label}
+                                            key={th.label}
                                             onClick={() => setSelectedThickness(idx)}
                                             className={`py-3 rounded-lg flex items-center justify-center gap-2 ${selectedThickness === idx
-                                                    ? "border-2 border-primary bg-primary/5"
-                                                    : "border-2 border-zinc-200 hover:border-zinc-400"
+                                                ? "border-2 border-primary bg-primary/5"
+                                                : "border-2 border-zinc-200 hover:border-zinc-400"
                                                 }`}
                                         >
-                                            <span className="text-sm font-medium">{t.label}</span>
+                                            <span className="text-sm font-medium">{th.label}</span>
                                             {selectedThickness === idx && (
                                                 <span className="material-icons text-primary text-sm">
                                                     check_circle
@@ -244,24 +216,24 @@ export default function ProductDetailPage() {
                         <div className="mt-10 pt-10 border-t border-zinc-200 grid grid-cols-3 gap-4">
                             <div className="text-center">
                                 <span className="block text-[10px] text-zinc-500 font-bold uppercase tracking-tighter mb-1">
-                                    Breed
+                                    {t.productDetail.breed}
                                 </span>
                                 <span className="block text-xs font-semibold">
-                                    Kuroge Washu
+                                    {t.productDetail.breedValue}
                                 </span>
                             </div>
                             <div className="text-center border-x border-zinc-200">
                                 <span className="block text-[10px] text-zinc-500 font-bold uppercase tracking-tighter mb-1">
-                                    Feeding
+                                    {t.productDetail.feeding}
                                 </span>
-                                <span className="block text-xs font-semibold">600+ Days</span>
+                                <span className="block text-xs font-semibold">{t.productDetail.feedingValue}</span>
                             </div>
                             <div className="text-center">
                                 <span className="block text-[10px] text-zinc-500 font-bold uppercase tracking-tighter mb-1">
-                                    Aging
+                                    {t.productDetail.aging}
                                 </span>
                                 <span className="block text-xs font-semibold">
-                                    21-Day Wet
+                                    {t.productDetail.agingValue}
                                 </span>
                             </div>
                         </div>
@@ -272,12 +244,10 @@ export default function ProductDetailPage() {
                 <section className="mt-20 py-16 border-t border-zinc-200">
                     <div className="max-w-3xl mx-auto text-center mb-12">
                         <h2 className="text-3xl font-bold mb-4 tracking-tight uppercase italic">
-                            The Perfect Sear
+                            {t.productDetail.perfectSear}
                         </h2>
                         <p className="text-zinc-500 leading-relaxed">
-                            Wagyu fat melts at room temperature. We recommend a quick sear on
-                            high heat in a cast-iron skillet to preserve the exquisite
-                            marbling and flavor.
+                            {t.productDetail.perfectSearDesc}
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -285,21 +255,21 @@ export default function ProductDetailPage() {
                             <div
                                 key={d.name}
                                 className={`p-4 rounded-xl ${d.recommended
-                                        ? "bg-white border-2 border-primary shadow-lg scale-105"
-                                        : "bg-white border border-zinc-100"
+                                    ? "bg-white border-2 border-primary shadow-lg scale-105"
+                                    : "bg-white border border-zinc-100"
                                     }`}
                             >
                                 <div
                                     className={`h-1 w-full rounded-full mb-4 ${d.name === "Well Done"
-                                            ? "bg-zinc-950"
-                                            : `bg-gradient-to-r ${d.gradient}`
+                                        ? "bg-zinc-950"
+                                        : `bg-gradient-to-r ${d.gradient}`
                                         }`}
                                 />
                                 <div className="flex justify-between items-start">
                                     <h3 className="font-bold text-sm uppercase">{d.name}</h3>
                                     {d.recommended && (
                                         <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-bold">
-                                            RECOMMENDED
+                                            {t.productDetail.recommended}
                                         </span>
                                     )}
                                 </div>
@@ -316,19 +286,14 @@ export default function ProductDetailPage() {
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-16 py-16 border-t border-zinc-200">
                     <div>
                         <h2 className="text-2xl font-bold mb-6 tracking-tight">
-                            THE PINNACLE OF BEEF
+                            {t.productDetail.pinnacleTitle}
                         </h2>
                         <div className="space-y-4 text-zinc-600 leading-relaxed">
                             <p>
-                                Our Miyazaki Prefecture A5 Ribeye represents the absolute peak
-                                of the Kuroge Washu breed. Each cut is hand-selected for its
-                                intense intramuscular fat marbling, which gives Wagyu its
-                                legendary &quot;melt-in-your-mouth&quot; texture.
+                                {t.productDetail.pinnacleP1}
                             </p>
                             <p>
-                                The A5 rating is the highest possible grade awarded by the
-                                Japanese Meat Grading Association, evaluating marbling (BMS),
-                                color, firmness, and fat quality.
+                                {t.productDetail.pinnacleP2}
                             </p>
                         </div>
                         <ul className="mt-8 space-y-3">
@@ -337,7 +302,7 @@ export default function ProductDetailPage() {
                                     verified
                                 </span>
                                 <span className="text-sm font-medium">
-                                    Authentic Japanese Certificate Included
+                                    {t.productDetail.feature1}
                                 </span>
                             </li>
                             <li className="flex items-center gap-3">
@@ -345,7 +310,7 @@ export default function ProductDetailPage() {
                                     ac_unit
                                 </span>
                                 <span className="text-sm font-medium">
-                                    Shipped in specialized cold-chain packaging
+                                    {t.productDetail.feature2}
                                 </span>
                             </li>
                             <li className="flex items-center gap-3">
@@ -353,7 +318,7 @@ export default function ProductDetailPage() {
                                     restaurant_menu
                                 </span>
                                 <span className="text-sm font-medium">
-                                    Portioned by master butchers in our local facility
+                                    {t.productDetail.feature3}
                                 </span>
                             </li>
                         </ul>
@@ -368,10 +333,10 @@ export default function ProductDetailPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
                             <div className="text-white">
                                 <p className="text-3xl font-bold italic">
-                                    &quot;An unparalleled sensory experience.&quot;
+                                    {t.productDetail.quote}
                                 </p>
                                 <p className="text-sm mt-2 opacity-80">
-                                    — Chef Marcus V., Michelin Star Consultant
+                                    {t.productDetail.quoteAuthor}
                                 </p>
                             </div>
                         </div>
@@ -385,12 +350,12 @@ export default function ProductDetailPage() {
                     <div className="flex items-center justify-between">
                         <div className="hidden sm:flex flex-col">
                             <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                                Total Price
+                                {t.productDetail.totalPrice}
                             </span>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-2xl font-bold">$124.00</span>
                                 <span className="text-[10px] text-zinc-400 font-medium">
-                                    EXCLUDING TAXES
+                                    {t.productDetail.excludingTaxes}
                                 </span>
                             </div>
                         </div>
@@ -416,7 +381,7 @@ export default function ProductDetailPage() {
 
                             {/* CTA Button */}
                             <button className="flex-1 sm:flex-none px-12 h-12 bg-primary hover:bg-primary/90 text-white font-bold text-sm uppercase tracking-widest transition-all rounded-lg flex items-center justify-center gap-2">
-                                <span>Add to Cart</span>
+                                <span>{t.productDetail.addToCartBtn}</span>
                                 <span className="material-icons text-lg">arrow_forward</span>
                             </button>
 
