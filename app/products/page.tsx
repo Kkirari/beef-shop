@@ -265,7 +265,7 @@ export default function ProductsPage() {
         <Link
             key={product.slug}
             href={`/products/${product.slug}`}
-            className="bg-white rounded-2xl overflow-hidden card-shadow block group"
+            className="bg-white rounded-2xl overflow-hidden card-shadow flex flex-col group h-full"
         >
             {/* Product Image */}
             <div className="relative h-56 overflow-hidden bg-charcoal">
@@ -283,7 +283,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Product Info */}
-            <div className="p-5">
+            <div className="p-5 flex flex-col flex-1">
                 <div className="flex items-start justify-between mb-1">
                     <h3 className="font-bold text-base leading-tight">
                         {product.name}
@@ -312,7 +312,7 @@ export default function ProductsPage() {
 
                 <button
                     onClick={(e) => addToCart(product, e)}
-                    className="w-full bg-primary hover:bg-red-700 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-primary hover:bg-red-700 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-auto"
                 >
                     <span className="material-icons text-base">
                         shopping_cart
